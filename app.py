@@ -3,11 +3,26 @@ import random
 import matplotlib.pyplot as plt
 import time
 
-st.set_page_config(page_title="KrishiBondhu AI System", layout="wide")
+# ---------------- PAGE CONFIG (RESPONSIVE) ----------------
+st.set_page_config(
+    page_title="ক্ষেত নিয়ন্ত্রণ সিস্টেম",
+    layout="centered"   # BEST for mobile + laptop balance
+)
+
+# ---------------- OPTIONAL MOBILE TIGHT CSS ----------------
+st.markdown("""
+<style>
+.block-container {
+    padding-top: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ---------------- STATE ----------------
 if "moisture" not in st.session_state:
-    st.session_state.moisture = 40
+    st.session_state.moisture = 45
 
 if "history" not in st.session_state:
     st.session_state.history = []
@@ -18,28 +33,29 @@ if "mode" not in st.session_state:
 threshold = 50
 
 # ---------------- HEADER ----------------
-st.title("🌱 KrishiBondhu Smart Agriculture System")
+st.title("🌾 ক্ষেত নিয়ন্ত্রণ স্মার্ট সিস্টেম")
+st.caption("মাঠের সেচ ও সার ব্যবস্থাপনার জন্য একটি নিয়ন্ত্রণ প্যানেল")
 
-mode = st.radio("Select Mode", ["Farmer Mode 👨‍🌾", "Expert Mode 🧑‍🔬"])
+st.divider()
 
+# ---------------- MODE ----------------
+mode = st.radio("মোড নির্বাচন করুন", ["Farmer Mode 👨‍🌾", "Expert Mode 🧑‍🔬"])
 st.session_state.mode = mode
 
 st.divider()
 
-# ---------------- LIVE SIMULATION ----------------
-# Natural environment change (this makes it "live")
-change = random.randint(-3, 3)
-st.session_state.moisture += change
+# ---------------- NATURAL CHANGE (LIVE SIMULATION) ----------------
+st.session_state.moisture += random.randint(-3, 3)
 
-# Buttons (user interaction)
+# ---------------- CONTROLS (RESPONSIVE SAFE) ----------------
 col1, col2 = st.columns(2)
 
 with col1:
-    if st.button("🌧️ Simulate Rain"):
+    if st.button("🌧️ বৃষ্টি"):
         st.session_state.moisture += 20
 
 with col2:
-    if st.button("☀️ Simulate Heat"):
+    if st.button("☀️ গরম"):
         st.session_state.moisture -= 20
 
 # clamp values
@@ -47,30 +63,31 @@ st.session_state.moisture = max(0, min(100, st.session_state.moisture))
 
 m = st.session_state.moisture
 
-# ---------------- MODE LOGIC ----------------
+# ---------------- LOGIC ----------------
+irrigation = False
+
+if m < 30:
+    irrigation = True
+    fert = "⚠️ সার প্রয়োগ প্রয়োজন (মাটি খুব শুষ্ক)"
+elif m < 70:
+    fert = "🌿 সার স্বাভাবিক অবস্থায় আছে"
+else:
+    fert = "🌧️ অতিরিক্ত আর্দ্রতা — সার প্রয়োজন নেই"
+
+# ---------------- MODE OUTPUT ----------------
 if st.session_state.mode == "Farmer Mode 👨‍🌾":
 
-    if m < 30:
-        status = "💧 সেচ দিন (পানি প্রয়োজন)"
-        advice = "মাটি খুব শুকনো, দ্রুত সেচ দিন।"
-    elif m < 70:
-        status = "🌿 স্বাভাবিক অবস্থা"
-        advice = "বর্তমানে মাটি ঠিক আছে।"
+    if irrigation:
+        status = "💧 সেচ চালু হয়েছে"
     else:
-        status = "🌧️ অতিরিক্ত আর্দ্রতা"
-        advice = "সেচ বন্ধ রাখুন।"
+        status = "🌱 সেচ বন্ধ আছে"
+
+    advice = fert
 
 else:
 
-    if m < 30:
-        status = "CRITICAL DRY CONDITION"
-        advice = "Soil moisture critically low. Irrigation system must be activated immediately."
-    elif m < 70:
-        status = "STABLE CONDITION"
-        advice = "Soil is within optimal agricultural range."
-    else:
-        status = "HIGH MOISTURE LEVEL"
-        advice = "Risk of over-irrigation. Drainage recommended."
+    status = f"IRRIGATION SYSTEM: {'ACTIVE' if irrigation else 'OFF'}"
+    advice = f"Moisture: {m}% | Threshold Logic Applied"
 
 # ---------------- HISTORY ----------------
 st.session_state.history.append(m)
@@ -78,28 +95,35 @@ if len(st.session_state.history) > 40:
     st.session_state.history.pop(0)
 
 # ---------------- DASHBOARD ----------------
-colA, colB = st.columns(2)
+st.subheader("🎛️ নিয়ন্ত্রণ প্যানেল")
 
-with colA:
-    st.metric("Soil Moisture", f"{m}%")
-    st.progress(m / 100)
+st.metric("মাটির আর্দ্রতা", f"{m}%")
+st.progress(m / 100)
 
-with colB:
-    st.subheader("System Status")
-    st.write(status)
-    st.info(advice)
+st.success(status)
+st.info(advice)
 
-# ---------------- LIVE GRAPH ----------------
-st.subheader("📊 Live Moisture Graph")
+# ---------------- ALERT SECTION ----------------
+st.subheader("🌱 কৃষি পরামর্শ")
 
-fig, ax = plt.subplots()
+if m < 30:
+    st.error("🚨 জরুরি: সেচ ও সার প্রয়োগ করুন")
+elif m < 70:
+    st.warning("ℹ️ পর্যবেক্ষণ করুন")
+else:
+    st.success("✅ অতিরিক্ত আর্দ্রতা — সেচ বন্ধ রাখুন")
+
+# ---------------- GRAPH (MOBILE FRIENDLY SIZE) ----------------
+st.subheader("📊 মাঠের আর্দ্রতা পরিবর্তন")
+
+fig, ax = plt.subplots(figsize=(6, 3))
 ax.plot(st.session_state.history, linewidth=2)
 ax.set_ylim(0, 100)
-ax.set_xlabel("Time")
-ax.set_ylabel("Moisture")
+ax.set_xlabel("সময়")
+ax.set_ylabel("আর্দ্রতা (%)")
 
 st.pyplot(fig)
 
-# ---------------- AUTO REFRESH ----------------
+# ---------------- LIVE UPDATE ----------------
 time.sleep(1)
 st.rerun()
