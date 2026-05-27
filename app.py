@@ -3,19 +3,24 @@ import random
 import matplotlib.pyplot as plt
 import time
 
-# ---------------- PAGE CONFIG (RESPONSIVE) ----------------
+# ---------------- PAGE CONFIG ----------------
 st.set_page_config(
     page_title="কৃষিবন্ধু স্মার্ট মাঠ",
-    layout="centered"   # BEST for mobile + laptop balance
+    layout="centered"
 )
 
-# ---------------- OPTIONAL MOBILE TIGHT CSS ----------------
+# ---------------- CUSTOM UI STYLE ----------------
 st.markdown("""
 <style>
-.block-container {
-    padding-top: 1rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
+.main-title {
+    font-size:28px;
+    font-weight:700;
+}
+.card {
+    padding: 15px;
+    border-radius: 12px;
+    background-color: #f5f7fa;
+    margin-bottom: 10px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -30,100 +35,87 @@ if "history" not in st.session_state:
 if "mode" not in st.session_state:
     st.session_state.mode = "Farmer"
 
-threshold = 50
-
 # ---------------- HEADER ----------------
-st.title("🌾 কৃষিবন্ধু স্মার্ট মাঠ")
-st.caption("মাঠের সেচ ও সার ব্যবস্থাপনার জন্য একটি আস্থাযোগ্য প্ল্যাটফর্ম")
+st.markdown('<div class="main-title">🌾 কৃষিবন্ধু স্মার্ট মাঠ</div>', unsafe_allow_html=True)
+st.caption("স্মার্ট কৃষি সহায়ক সিস্টেম")
 
-st.divider()
+# ---------------- TABS (APP-LIKE UI) ----------------
+tab1, tab2, tab3 = st.tabs(["🏠 ড্যাশবোর্ড", "🎛️ নিয়ন্ত্রণ", "📊 বিশ্লেষণ"])
 
-# ---------------- MODE ----------------
-mode = st.radio("মোড নির্বাচন করুন", ["Farmer Mode 👨‍🌾", "Expert Mode 🧑‍🔬"])
-st.session_state.mode = mode
-
-st.divider()
-
-# ---------------- NATURAL CHANGE (LIVE SIMULATION) ----------------
-st.session_state.moisture += random.randint(-3, 3)
-
-# ---------------- CONTROLS (RESPONSIVE SAFE) ----------------
-col1, col2 = st.columns(2)
-
-with col1:
-    if st.button("🌧️ বৃষ্টি"):
-        st.session_state.moisture += 20
-
-with col2:
-    if st.button("☀️ গরম"):
-        st.session_state.moisture -= 20
-
-# clamp values
+# ---------------- LIVE SIMULATION ----------------
+st.session_state.moisture += random.randint(-2, 2)
 st.session_state.moisture = max(0, min(100, st.session_state.moisture))
-
 m = st.session_state.moisture
 
 # ---------------- LOGIC ----------------
-irrigation = False
-
 if m < 30:
     irrigation = True
-    fert = "⚠️ সার প্রয়োগ প্রয়োজন (মাটি খুব শুষ্ক)"
+    fert = "🚨 মাটি শুষ্ক — সেচ ও সার দিন"
 elif m < 70:
-    fert = "🌿 সার স্বাভাবিক অবস্থায় আছে"
+    irrigation = False
+    fert = "🌿 স্বাভাবিক অবস্থা"
 else:
-    fert = "🌧️ অতিরিক্ত আর্দ্রতা — সার প্রয়োজন নেই"
-
-# ---------------- MODE OUTPUT ----------------
-if st.session_state.mode == "Farmer Mode 👨‍🌾":
-
-    if irrigation:
-        status = "💧 সেচ চালু হয়েছে"
-    else:
-        status = "🌱 সেচ বন্ধ আছে"
-
-    advice = fert
-
-else:
-
-    status = f"IRRIGATION SYSTEM: {'ACTIVE' if irrigation else 'OFF'}"
-    advice = f"Moisture: {m}% | Threshold Logic Applied"
+    irrigation = False
+    fert = "🌧️ অতিরিক্ত আর্দ্রতা — সেচ বন্ধ"
 
 # ---------------- HISTORY ----------------
 st.session_state.history.append(m)
 if len(st.session_state.history) > 40:
     st.session_state.history.pop(0)
 
-# ---------------- DASHBOARD ----------------
-st.subheader("🎛️ নিয়ন্ত্রণ প্যানেল")
+# ================= TAB 1: DASHBOARD =================
+with tab1:
 
-st.metric("মাটির আর্দ্রতা", f"{m}%")
-st.progress(m / 100)
+    st.subheader("🌱 বর্তমান অবস্থা")
 
-st.success(status)
-st.info(advice)
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.metric("মাটির আর্দ্রতা", f"{m}%")
+    st.progress(m / 100)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------- ALERT SECTION ----------------
-st.subheader("🌱 কৃষি পরামর্শ")
+    if irrigation:
+        st.success("💧 সেচ চালু আছে")
+    else:
+        st.info("🌱 সেচ বন্ধ আছে")
 
-if m < 30:
-    st.error("🚨 জরুরি: সেচ ও সার প্রয়োগ করুন")
-elif m < 70:
-    st.warning("ℹ️ পর্যবেক্ষণ করুন")
-else:
-    st.success("✅ অতিরিক্ত আর্দ্রতা — সেচ বন্ধ রাখুন")
+    st.markdown(f"**{fert}**")
 
-# ---------------- GRAPH (MOBILE FRIENDLY SIZE) ----------------
-st.subheader("📊 মাঠের আর্দ্রতা পরিবর্তন")
+# ================= TAB 2: CONTROL =================
+with tab2:
 
-fig, ax = plt.subplots(figsize=(6, 3))
-ax.plot(st.session_state.history, linewidth=2)
-ax.set_ylim(0, 100)
-ax.set_xlabel("সময়")
-ax.set_ylabel("আর্দ্রতা (%)")
+    st.subheader("🎛️ নিয়ন্ত্রণ প্যানেল")
 
-st.pyplot(fig)
+    mode = st.radio("মোড নির্বাচন", ["Farmer Mode 👨‍🌾", "Expert Mode 🧑‍🔬"])
+    st.session_state.mode = mode
 
-# ---------------- LIVE UPDATE ----------------
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("🌧️ বৃষ্টি"):
+            st.session_state.moisture += 20
+
+    with col2:
+        if st.button("☀️ গরম"):
+            st.session_state.moisture -= 20
+
+    st.markdown("---")
+
+    if mode == "Expert Mode 🧑‍🔬":
+        st.code(f"Moisture Level: {m}%\nIrrigation: {'ON' if irrigation else 'OFF'}")
+
+# ================= TAB 3: ANALYTICS =================
+with tab3:
+
+    st.subheader("📊 আর্দ্রতা বিশ্লেষণ")
+
+    fig, ax = plt.subplots(figsize=(6, 3))
+    ax.plot(st.session_state.history, linewidth=2)
+    ax.set_ylim(0, 100)
+    ax.set_xlabel("সময়")
+    ax.set_ylabel("আর্দ্রতা (%)")
+
+    st.pyplot(fig)
+
+# ---------------- AUTO REFRESH ----------------
 time.sleep(1)
 st.rerun()
