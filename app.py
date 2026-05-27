@@ -15,7 +15,6 @@ st.set_page_config(
 # -----------------------------
 st.markdown("""
 <style>
-
 .block-container {
     padding-top: 3rem;
 }
@@ -32,7 +31,6 @@ st.markdown("""
     font-size: 34px;
     font-weight: 700;
     color: white;
-    margin: 0;
 }
 
 .subheader {
@@ -40,7 +38,6 @@ st.markdown("""
     color: #d8f3dc;
     margin-top: 10px;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -59,50 +56,69 @@ st.markdown("""
 st.write("")
 
 # -----------------------------
-# SIMULATED SENSOR DATA
+# FAKE SENSOR DATA (for demo)
 # -----------------------------
-water_level = random.randint(20, 100)
-fertilizer_level = random.randint(20, 100)
+soil_moisture = random.randint(20, 100)
+fertility = random.randint(20, 100)
 
 # -----------------------------
-# METERS SECTION
+# WATER METER
 # -----------------------------
-col1, col2 = st.columns(2)
+st.subheader("💧 সেচ (Water Level)")
 
-with col1:
-    st.subheader("💧 পানি স্তর (Water Level)")
-    st.progress(water_level)
+st.progress(soil_moisture)
 
-    if water_level < 40:
-        st.error("⚠️ এখনই পানি দিন")
-    elif water_level < 70:
-        st.warning("পানি প্রয়োজন হতে পারে")
-    else:
-        st.success("পানি পর্যাপ্ত আছে")
+if soil_moisture < 40:
+    st.error("🚨 এখনই পানি দিন!")
+elif soil_moisture < 70:
+    st.warning("⚠️ অল্প পানি প্রয়োজন")
+else:
+    st.success("✅ মাটি ভেজা আছে, এখন পানি লাগবে না")
 
-with col2:
-    st.subheader("🌿 সার স্তর (Fertilizer Level)")
-    st.progress(fertilizer_level)
+st.write(f"বর্তমান আর্দ্রতা: {soil_moisture}%")
 
-    if fertilizer_level < 40:
-        st.error("⚠️ এখনই সার প্রয়োগ করুন")
-    elif fertilizer_level < 70:
-        st.warning("সার প্রয়োজন হতে পারে")
-    else:
-        st.success("সার পর্যাপ্ত আছে")
+# -----------------------------
+# FERTILIZER METER
+# -----------------------------
+st.subheader("🌿 সার (Fertilizer Level)")
+
+st.progress(fertility)
+
+if fertility < 40:
+    st.error("🚨 এখনই সার প্রয়োজন!")
+elif fertility < 70:
+    st.warning("⚠️ কিছুটা সার দিতে হবে")
+else:
+    st.success("✅ সার পর্যাপ্ত আছে")
+
+st.write(f"বর্তমান উর্বরতা: {fertility}%")
 
 # -----------------------------
 # GRAPH DATA
 # -----------------------------
-st.write("")
-st.subheader("📊 গত ৭ দিনের অবস্থা")
+st.subheader("📊 গত কয়েক দিনের অবস্থা")
 
-data = pd.DataFrame({
-    "Day": ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"],
-    "Water": [random.randint(30, 100) for _ in range(7)],
-    "Fertilizer": [random.randint(30, 100) for _ in range(7)]
-})
+days = ["Day 1","Day 2","Day 3","Day 4","Day 5","Today"]
 
-data.set_index("Day", inplace=True)
+data = {
+    "Water Level": [random.randint(30,90) for _ in range(6)],
+    "Fertilizer Level": [random.randint(30,90) for _ in range(6)]
+}
 
-st.line_chart(data)
+df = pd.DataFrame(data, index=days)
+
+st.line_chart(df)
+
+# -----------------------------
+# FINAL ADVICE
+# -----------------------------
+st.subheader("🧠 স্মার্ট পরামর্শ")
+
+if soil_moisture < 40 and fertility < 40:
+    st.error("⚠️ জরুরি: পানি ও সার দুটোই দিন!")
+elif soil_moisture < 40:
+    st.warning("💧 শুধুমাত্র পানি দিন")
+elif fertility < 40:
+    st.warning("🌿 শুধুমাত্র সার দিন")
+else:
+    st.success("🌱 সব কিছু ঠিক আছে!")
