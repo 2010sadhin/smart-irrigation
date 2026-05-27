@@ -5,7 +5,7 @@ import time
 
 # ---------------- PAGE CONFIG (RESPONSIVE) ----------------
 st.set_page_config(
-    page_title="ক্ষেত নিয়ন্ত্রণ সিস্টেম",
+    page_title="কৃষিবন্ধু স্মার্ট মাঠ",
     layout="centered"   # BEST for mobile + laptop balance
 )
 
