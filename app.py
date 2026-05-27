@@ -1,6 +1,7 @@
 import streamlit as st
 import random
 import matplotlib.pyplot as plt
+import time
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="কৃষিবন্ধু স্মার্ট মাঠ", layout="wide")
@@ -10,9 +11,7 @@ st.markdown("""
 <style>
 
 .block-container {
-    padding-top: 1.5rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-top: 1rem;
 }
 
 /* Header */
@@ -20,7 +19,7 @@ st.markdown("""
     background: linear-gradient(90deg, #1b4332, #2d6a4f);
     padding: 15px;
     border-radius: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 .header {
@@ -30,7 +29,7 @@ st.markdown("""
 }
 
 .subheader {
-    font-size: 14px;
+    font-size: 13px;
     color: #d8f3dc;
 }
 
@@ -46,74 +45,73 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------- MODE ----------------
-mode = st.radio("মোড নির্বাচন:", ["👨‍🌾 Farmer Mode", "🧠 Expert Mode"], horizontal=True)
+mode = st.radio("মোড:", ["👨‍🌾 Farmer", "🧠 Expert"], horizontal=True)
 
-# ---------------- LIVE DATA ----------------
+# ---------------- INIT STATE ----------------
 if "moisture" not in st.session_state:
-    st.session_state.moisture = [random.randint(60, 90) for _ in range(20)]
+    st.session_state.moisture = [random.randint(65, 85) for _ in range(20)]
 
-def update():
-    if len(st.session_state.moisture) == 0:
-        st.session_state.moisture = [70]
+if "pump" not in st.session_state:
+    st.session_state.pump = "OFF"
 
-    val = st.session_state.moisture[-1] + random.randint(-2, 2)
-    val = max(40, min(100, val))
+# ---------------- AUTO UPDATE ----------------
+def auto_update():
+    last = st.session_state.moisture[-1]
 
-    st.session_state.moisture.append(val)
+    # Natural change
+    change = random.randint(-3, 2)
+    new = max(35, min(100, last + change))
+
+    # Smart irrigation logic
+    if new < 50:
+        st.session_state.pump = "ON"
+        new += 3  # water increases moisture
+    elif new > 80:
+        st.session_state.pump = "OFF"
+
+    st.session_state.moisture.append(new)
     st.session_state.moisture.pop(0)
 
-update()
+auto_update()
 current = st.session_state.moisture[-1]
 
 # ---------------- STATUS ----------------
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.subheader("📊 বর্তমান অবস্থা")
-    st.metric("মাটির আর্দ্রতা", f"{current}%")
-
-    if current < 50:
-        st.error("🚨 পানি দিন")
-    elif current < 70:
-        st.warning("⚠️ অল্প পানি দরকার")
-    else:
-        st.success("✅ সব ঠিক আছে")
+    st.subheader("📊 মাটির অবস্থা")
+    st.metric("আর্দ্রতা", f"{current}%")
 
 with col2:
-    st.subheader("🌾 স্মার্ট পরামর্শ")
+    st.subheader("💧 পাম্প অবস্থা")
+    if st.session_state.pump == "ON":
+        st.success("চালু")
+    else:
+        st.error("বন্ধ")
+
+with col3:
+    st.subheader("🌿 অবস্থা বিশ্লেষণ")
 
     if current < 50:
-        st.write("🌱 ফসল: ধান / সবজি")
-        st.write("🧪 সার: ইউরিয়া প্রয়োগ করুন")
-        st.write("💧 সেচ: বেশি পানি দিন")
+        st.error("🚨 মাটি শুকনো")
     elif current < 70:
-        st.write("🌱 ফসল: সবজি")
-        st.write("🧪 সার: কম্পোস্ট ব্যবহার করুন")
-        st.write("💧 সেচ: মাঝারি পানি")
+        st.warning("⚠️ মাঝামাঝি")
     else:
-        st.write("🌱 ফসল: ধান")
-        st.write("🧪 সার: এখন দরকার নেই")
-        st.write("💧 সেচ: বন্ধ রাখুন")
+        st.success("✅ ভালো অবস্থা")
 
-# ---------------- CONTROL ----------------
-st.subheader("🎛 নিয়ন্ত্রণ")
+# ---------------- SMART ADVICE ----------------
+st.subheader("🤖 স্বয়ংক্রিয় সিদ্ধান্ত")
 
-c1, c2, c3 = st.columns(3)
-
-with c1:
-    if st.button("🌧 পানি দিন"):
-        st.success("সেচ চালু হয়েছে")
-
-with c2:
-    if st.button("☀️ শুকানো"):
-        st.info("শুকানোর মোড চালু")
-
-with c3:
-    if st.button("💧 বন্ধ"):
-        st.warning("সেচ বন্ধ করা হয়েছে")
+if current < 50:
+    st.write("💧 সেচ স্বয়ংক্রিয়ভাবে চালু হয়েছে")
+    st.write("🧪 ইউরিয়া প্রয়োগ করা যেতে পারে")
+elif current > 85:
+    st.write("🚫 অতিরিক্ত পানি — সেচ বন্ধ")
+else:
+    st.write("🌱 সবকিছু স্বাভাবিক চলছে")
 
 # ---------------- GRAPH ----------------
-st.subheader("📈 লাইভ আর্দ্রতা গ্রাফ")
+st.subheader("📈 লাইভ ডেটা স্ট্রিম")
 
 fig, ax = plt.subplots()
 ax.plot(st.session_state.moisture)
@@ -123,18 +121,20 @@ ax.set_ylabel("আর্দ্রতা (%)")
 st.pyplot(fig)
 
 # ---------------- EXPERT MODE ----------------
-if mode == "🧠 Expert Mode":
-    st.subheader("🔬 বিস্তারিত বিশ্লেষণ")
+if mode == "🧠 Expert":
+    st.subheader("🔬 সিস্টেম লজিক")
 
-    st.write("বর্তমান আর্দ্রতা:", current)
+    st.write(f"Current Moisture: {current}")
+    st.write(f"Pump Status: {st.session_state.pump}")
 
-    if current < 50:
-        st.write("মাটি খুব শুষ্ক — জরুরি সেচ প্রয়োজন")
-    elif current > 85:
-        st.write("অতিরিক্ত ভেজা — পানি বন্ধ করুন")
-    else:
-        st.write("স্বাভাবিক অবস্থা")
+    st.write("Logic:")
+    st.code("""
+IF moisture < 50:
+    pump = ON
+IF moisture > 80:
+    pump = OFF
+""")
 
-# ---------------- SAFE REFRESH ----------------
-if st.button("🔄 আপডেট করুন"):
-    st.rerun()
+# ---------------- AUTO REFRESH ----------------
+time.sleep(2)
+st.rerun()
