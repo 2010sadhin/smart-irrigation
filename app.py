@@ -1,4 +1,6 @@
 import streamlit as st
+import random
+import pandas as pd
 
 # -----------------------------
 # PAGE CONFIG
@@ -14,12 +16,10 @@ st.set_page_config(
 st.markdown("""
 <style>
 
-/* Reduce top gap */
 .block-container {
     padding-top: 3rem;
 }
 
-/* Header container */
 .header-box {
     background: linear-gradient(90deg, #1b4332, #2d6a4f);
     padding: 30px 20px;
@@ -28,32 +28,24 @@ st.markdown("""
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-/* Title */
 .header {
     font-size: 34px;
     font-weight: 700;
     color: white;
     margin: 0;
-    line-height: 1.4;
 }
 
-/* Subtitle */
 .subheader {
     font-size: 16px;
     color: #d8f3dc;
     margin-top: 10px;
 }
 
-/* Optional: center whole app content */
-.main {
-    text-align: center;
-}
-
 </style>
 """, unsafe_allow_html=True)
 
 # -----------------------------
-# HEADER UI
+# HEADER
 # -----------------------------
 st.markdown("""
 <div class="header-box">
@@ -64,13 +56,53 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# -----------------------------
-# EMPTY BODY (CLEAN LOOK)
-# -----------------------------
-st.write("")
-st.write("")
-st.write("")
 st.write("")
 
-# Optional placeholder (remove if not needed)
-st.markdown("### 🚧 Dashboard coming soon...")
+# -----------------------------
+# SIMULATED SENSOR DATA
+# -----------------------------
+water_level = random.randint(20, 100)
+fertilizer_level = random.randint(20, 100)
+
+# -----------------------------
+# METERS SECTION
+# -----------------------------
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("💧 পানি স্তর (Water Level)")
+    st.progress(water_level)
+
+    if water_level < 40:
+        st.error("⚠️ এখনই পানি দিন")
+    elif water_level < 70:
+        st.warning("পানি প্রয়োজন হতে পারে")
+    else:
+        st.success("পানি পর্যাপ্ত আছে")
+
+with col2:
+    st.subheader("🌿 সার স্তর (Fertilizer Level)")
+    st.progress(fertilizer_level)
+
+    if fertilizer_level < 40:
+        st.error("⚠️ এখনই সার প্রয়োগ করুন")
+    elif fertilizer_level < 70:
+        st.warning("সার প্রয়োজন হতে পারে")
+    else:
+        st.success("সার পর্যাপ্ত আছে")
+
+# -----------------------------
+# GRAPH DATA
+# -----------------------------
+st.write("")
+st.subheader("📊 গত ৭ দিনের অবস্থা")
+
+data = pd.DataFrame({
+    "Day": ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"],
+    "Water": [random.randint(30, 100) for _ in range(7)],
+    "Fertilizer": [random.randint(30, 100) for _ in range(7)]
+})
+
+data.set_index("Day", inplace=True)
+
+st.line_chart(data)
