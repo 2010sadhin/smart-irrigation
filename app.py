@@ -10,27 +10,36 @@ st.set_page_config(page_title="কৃষিবন্ধু স্মার্ট
 st.markdown("""
 <style>
 
+/* Fix top spacing */
 .block-container {
-    padding-top: 1rem;
+    padding-top: 2rem;
 }
 
-/* Header */
+/* Header box FIXED */
 .header-box {
     background: linear-gradient(90deg, #1b4332, #2d6a4f);
-    padding: 15px;
+    padding: 20px 25px;   /* more space */
     border-radius: 12px;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
+/* Title FIX */
 .header {
-    font-size: 26px;
-    color: white;
+    font-size: 30px;
     font-weight: 700;
+    color: white;
+    line-height: 1.4;   /* VERY IMPORTANT */
+    margin-top: 5px;    /* pushes text down */
 }
 
+/* Subtitle FIX */
 .subheader {
-    font-size: 13px;
+    font-size: 14px;
     color: #d8f3dc;
+    margin-top: 5px;
 }
 
 </style>
