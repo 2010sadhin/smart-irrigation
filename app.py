@@ -1,149 +1,161 @@
 import streamlit as st
 import random
-import matplotlib.pyplot as plt
 import time
+import matplotlib.pyplot as plt
 
 # ---------------- PAGE CONFIG ----------------
-st.set_page_config(
-    page_title="কৃষিবন্ধু মাঠসাথী",
-    layout="wide"
-)
+st.set_page_config(page_title="কৃষিবন্ধু সহায়ক", layout="wide")
 
-# ---------------- PROFESSIONAL CSS ----------------
+# ---------------- CSS ----------------
 st.markdown("""
 <style>
-
-/* Main container */
 .block-container {
-    max-width: 1200px;
-    padding: 1.5rem;
+    padding-top: 1.5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
 }
 
-/* Header */
-.header {
-    font-size: 34px;
-    font-weight: 800;
-    color: #1b4332;
-    margin-bottom: 0;
-}
-
-/* Subtitle */
-.subheader {
-    font-size: 16px;
-    color: #6c757d;
+.header-box {
+    background: linear-gradient(90deg, #1b4332, #2d6a4f);
+    padding: 15px;
+    border-radius: 12px;
     margin-bottom: 20px;
 }
 
-/* Card UI */
-.card {
-    padding: 20px;
-    border-radius: 14px;
-    background: white;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    margin-bottom: 15px;
+.header {
+    font-size: 28px;
+    color: white;
+    font-weight: 700;
 }
 
-/* Section title */
-.section {
-    font-size: 20px;
-    font-weight: 600;
-    margin-top: 20px;
-}
-
-/* Mobile fix */
-@media (max-width: 768px) {
-    .header {
-        font-size: 24px;
-    }
+.subheader {
+    font-size: 14px;
+    color: #d8f3dc;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------- STATE ----------------
-if "moisture" not in st.session_state:
-    st.session_state.moisture = 45
-
-if "history" not in st.session_state:
-    st.session_state.history = []
-
 # ---------------- HEADER ----------------
-st.markdown('<div class="header">🌾 কৃষিবন্ধু মাঠসাথী</div>', unsafe_allow_html=True)
-st.markdown('<div class="subheader">স্মার্ট কৃষি সহায়ক সিস্টেম</div>', unsafe_allow_html=True)
+st.markdown("""
+<div class="header-box">
+    <div class="header">🌱 কৃষিবন্ধু সহায়ক</div>
+    <div class="subheader">বাংলাদেশ স্মার্ট কৃষি সহায়ক</div>
+</div>
+""", unsafe_allow_html=True)
 
-st.divider()
+# ---------------- MODE ----------------
+mode = st.radio("মোড নির্বাচন:", ["👨‍🌾 Farmer Mode", "🧠 Expert Mode"], horizontal=True)
 
-# ---------------- LIVE SIMULATION ----------------
-st.session_state.moisture += random.randint(-2, 2)
-st.session_state.moisture = max(0, min(100, st.session_state.moisture))
-m = st.session_state.moisture
+# ---------------- 64 DISTRICTS ----------------
+districts = [
+"ঢাকা","গাজীপুর","নারায়ণগঞ্জ","টাঙ্গাইল","কিশোরগঞ্জ","মানিকগঞ্জ","মুন্সিগঞ্জ",
+"চট্টগ্রাম","কক্সবাজার","রাঙ্গামাটি","খাগড়াছড়ি","বান্দরবান","ফেনী","নোয়াখালী","লক্ষ্মীপুর",
+"রাজশাহী","নাটোর","নওগাঁ","চাঁপাইনবাবগঞ্জ","পাবনা","সিরাজগঞ্জ",
+"খুলনা","বাগেরহাট","সাতক্ষীরা","যশোর","নড়াইল","মাগুরা","কুষ্টিয়া","ঝিনাইদহ","মেহেরপুর",
+"বরিশাল","ভোলা","পটুয়াখালী","পিরোজপুর","ঝালকাঠি","বরগুনা",
+"সিলেট","মৌলভীবাজার","হবিগঞ্জ","সুনামগঞ্জ",
+"রংপুর","দিনাজপুর","কুড়িগ্রাম","লালমনিরহাট","নীলফামারী","গাইবান্ধা","ঠাকুরগাঁও","পঞ্চগড়",
+"ময়মনসিংহ","নেত্রকোনা","শেরপুর","জামালপুর",
+"মাদারীপুর","শরীয়তপুর","গোপালগঞ্জ","রাজবাড়ী","ফরিদপুর",
+"চাঁদপুর","কুমিল্লা","ব্রাহ্মণবাড়িয়া"
+]
 
-# ---------------- LOGIC ----------------
-if m < 30:
-    irrigation = True
-    fert = "🚨 মাটি শুষ্ক — সেচ ও সার দিন"
-elif m < 70:
-    irrigation = False
-    fert = "🌿 স্বাভাবিক অবস্থা"
-else:
-    irrigation = False
-    fert = "🌧️ অতিরিক্ত আর্দ্রতা — সেচ বন্ধ"
+# ---------------- LOCATION ----------------
+st.subheader("📍 আপনার জেলা নির্বাচন করুন")
+district = st.selectbox("জেলা:", districts)
 
-# ---------------- HISTORY ----------------
-st.session_state.history.append(m)
-if len(st.session_state.history) > 50:
-    st.session_state.history.pop(0)
+# ---------------- DISTRICT DATA ----------------
+def get_advice(district):
+    # simplified grouped logic
+    coastal = ["ভোলা","পটুয়াখালী","বরগুনা","কক্সবাজার","সাতক্ষীরা","বাগেরহাট"]
+    hilly = ["রাঙ্গামাটি","খাগড়াছড়ি","বান্দরবান"]
+    north = ["রংপুর","দিনাজপুর","ঠাকুরগাঁও","পঞ্চগড়","নীলফামারী"]
 
-# ---------------- DASHBOARD ----------------
-st.markdown('<div class="section">📊 বর্তমান অবস্থা</div>', unsafe_allow_html=True)
+    if district in coastal:
+        return {"crop":"লবণ সহনশীল ধান","fert":"জৈব সার","water":"কম সেচ"}
+    elif district in hilly:
+        return {"crop":"আদা, হলুদ","fert":"কম্পোস্ট","water":"মাঝারি"}
+    elif district in north:
+        return {"crop":"গম, ভুট্টা","fert":"নাইট্রোজেন","water":"নিয়মিত"}
+    else:
+        return {"crop":"ধান, সবজি","fert":"ইউরিয়া","water":"মাঝারি"}
 
+data = get_advice(district)
+
+# ---------------- LIVE DATA ----------------
+if "moisture" not in st.session_state:
+    st.session_state.moisture = [random.randint(60, 90) for _ in range(20)]
+
+def update():
+    val = st.session_state.moisture[-1] + random.randint(-2,2)
+    val = max(40, min(100, val))
+    st.session_state.moisture.append(val)
+    st.session_state.moisture.pop(0)
+
+update()
+current = st.session_state.moisture[-1]
+
+# ---------------- STATUS ----------------
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.metric("মাটির আর্দ্রতা", f"{m}%")
-    st.progress(m / 100)
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.subheader("📊 বর্তমান অবস্থা")
+    st.metric("মাটির আর্দ্রতা", f"{current}%")
+
+    if current < 50:
+        st.error("🚨 পানি দিন")
+    elif current < 70:
+        st.warning("⚠️ অল্প পানি দরকার")
+    else:
+        st.success("✅ সব ঠিক আছে")
 
 with col2:
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("🌾 জেলা ভিত্তিক পরামর্শ")
+    st.write("🌱 ফসল:", data["crop"])
+    st.write("🧪 সার:", data["fert"])
+    st.write("💧 সেচ:", data["water"])
 
-    if irrigation:
-        st.success("💧 সেচ চালু আছে")
-    else:
-        st.info("🌱 সেচ বন্ধ আছে")
-
-    st.write(fert)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# ---------------- CONTROLS ----------------
-st.markdown('<div class="section">🎛️ নিয়ন্ত্রণ</div>', unsafe_allow_html=True)
+# ---------------- CONTROL ----------------
+st.subheader("🎛 নিয়ন্ত্রণ")
 
 c1, c2, c3 = st.columns(3)
 
 with c1:
-    if st.button("🌧️ বৃষ্টি", use_container_width=True):
-        st.session_state.moisture += 20
+    if st.button("🌧 পানি দিন"):
+        st.success("সেচ চালু")
 
 with c2:
-    if st.button("☀️ গরম", use_container_width=True):
-        st.session_state.moisture -= 20
+    if st.button("☀️ শুকানো"):
+        st.info("শুকানো মোড চালু")
 
 with c3:
-    if st.button("💧 সেচ দিন", use_container_width=True):
-        st.session_state.moisture += 15
+    if st.button("💧 বন্ধ"):
+        st.warning("সেচ বন্ধ")
 
 # ---------------- GRAPH ----------------
-st.markdown('<div class="section">📈 আর্দ্রতা বিশ্লেষণ</div>', unsafe_allow_html=True)
+st.subheader("📈 লাইভ গ্রাফ")
 
-fig, ax = plt.subplots(figsize=(10, 4))
-ax.plot(st.session_state.history, linewidth=2)
-ax.set_ylim(0, 100)
-ax.set_xlabel("সময়")
+fig, ax = plt.subplots()
+ax.plot(st.session_state.moisture)
+ax.set_ylim(0,100)
 ax.set_ylabel("আর্দ্রতা (%)")
 
-st.pyplot(fig, use_container_width=True)
+st.pyplot(fig)
 
-# ---------------- AUTO REFRESH ----------------
-time.sleep(1)
+# ---------------- EXPERT ----------------
+if mode == "🧠 Expert Mode":
+    st.subheader("🔬 বিশ্লেষণ")
+    st.write("জেলা:", district)
+    st.write("বর্তমান আর্দ্রতা:", current)
+
+    if current < 50:
+        st.write("মাটি শুষ্ক")
+    elif current > 85:
+        st.write("অতিরিক্ত ভেজা")
+    else:
+        st.write("স্বাভাবিক")
+
+# ---------------- REFRESH ----------------
+time.sleep(2)
 st.rerun()
