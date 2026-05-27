@@ -3,7 +3,7 @@ import random
 import matplotlib.pyplot as plt
 
 # ---------------- PAGE CONFIG ----------------
-st.set_page_config(page_title="কৃষিবন্ধু সহায়ক", layout="wide")
+st.set_page_config(page_title="কৃষিবন্ধু স্মার্ট মাঠ", layout="wide")
 
 # ---------------- CSS ----------------
 st.markdown("""
@@ -40,50 +40,15 @@ st.markdown("""
 # ---------------- HEADER ----------------
 st.markdown("""
 <div class="header-box">
-    <div class="header">🌱 কৃষিবন্ধু সহায়ক</div>
-    <div class="subheader">বাংলাদেশ স্মার্ট কৃষি সহায়ক</div>
+    <div class="header">🌱 কৃষিবন্ধু স্মার্ট মাঠ</div>
+    <div class="subheader">মাঠের সেচ ও সার ব্যবস্থাপনার জন্য একটি আস্থাযোগ্য প্ল্যাটফর্ম</div>
 </div>
 """, unsafe_allow_html=True)
 
 # ---------------- MODE ----------------
 mode = st.radio("মোড নির্বাচন:", ["👨‍🌾 Farmer Mode", "🧠 Expert Mode"], horizontal=True)
 
-# ---------------- DISTRICTS ----------------
-districts = [
-"ঢাকা","গাজীপুর","নারায়ণগঞ্জ","টাঙ্গাইল","কিশোরগঞ্জ","মানিকগঞ্জ","মুন্সিগঞ্জ",
-"চট্টগ্রাম","কক্সবাজার","রাঙ্গামাটি","খাগড়াছড়ি","বান্দরবান","ফেনী","নোয়াখালী","লক্ষ্মীপুর",
-"রাজশাহী","নাটোর","নওগাঁ","চাঁপাইনবাবগঞ্জ","পাবনা","সিরাজগঞ্জ",
-"খুলনা","বাগেরহাট","সাতক্ষীরা","যশোর","নড়াইল","মাগুরা","কুষ্টিয়া","ঝিনাইদহ","মেহেরপুর",
-"বরিশাল","ভোলা","পটুয়াখালী","পিরোজপুর","ঝালকাঠি","বরগুনা",
-"সিলেট","মৌলভীবাজার","হবিগঞ্জ","সুনামগঞ্জ",
-"রংপুর","দিনাজপুর","কুড়িগ্রাম","লালমনিরহাট","নীলফামারী","গাইবান্ধা","ঠাকুরগাঁও","পঞ্চগড়",
-"ময়মনসিংহ","নেত্রকোনা","শেরপুর","জামালপুর",
-"মাদারীপুর","শরীয়তপুর","গোপালগঞ্জ","রাজবাড়ী","ফরিদপুর",
-"চাঁদপুর","কুমিল্লা","ব্রাহ্মণবাড়িয়া"
-]
-
-# ---------------- LOCATION ----------------
-st.subheader("📍 আপনার জেলা নির্বাচন করুন")
-district = st.selectbox("জেলা:", districts)
-
-# ---------------- DISTRICT LOGIC ----------------
-def get_advice(district):
-    coastal = ["ভোলা","পটুয়াখালী","বরগুনা","কক্সবাজার","সাতক্ষীরা","বাগেরহাট"]
-    hilly = ["রাঙ্গামাটি","খাগড়াছড়ি","বান্দরবান"]
-    north = ["রংপুর","দিনাজপুর","ঠাকুরগাঁও","পঞ্চগড়","নীলফামারী"]
-
-    if district in coastal:
-        return {"crop":"লবণ সহনশীল ধান","fert":"জৈব সার","water":"কম সেচ"}
-    elif district in hilly:
-        return {"crop":"আদা, হলুদ","fert":"কম্পোস্ট","water":"মাঝারি"}
-    elif district in north:
-        return {"crop":"গম, ভুট্টা","fert":"নাইট্রোজেন","water":"নিয়মিত"}
-    else:
-        return {"crop":"ধান, সবজি","fert":"ইউরিয়া","water":"মাঝারি"}
-
-data = get_advice(district)
-
-# ---------------- LIVE DATA (FIXED) ----------------
+# ---------------- LIVE DATA ----------------
 if "moisture" not in st.session_state:
     st.session_state.moisture = [random.randint(60, 90) for _ in range(20)]
 
@@ -115,10 +80,20 @@ with col1:
         st.success("✅ সব ঠিক আছে")
 
 with col2:
-    st.subheader("🌾 জেলা ভিত্তিক পরামর্শ")
-    st.write("🌱 ফসল:", data["crop"])
-    st.write("🧪 সার:", data["fert"])
-    st.write("💧 সেচ:", data["water"])
+    st.subheader("🌾 স্মার্ট পরামর্শ")
+
+    if current < 50:
+        st.write("🌱 ফসল: ধান / সবজি")
+        st.write("🧪 সার: ইউরিয়া প্রয়োগ করুন")
+        st.write("💧 সেচ: বেশি পানি দিন")
+    elif current < 70:
+        st.write("🌱 ফসল: সবজি")
+        st.write("🧪 সার: কম্পোস্ট ব্যবহার করুন")
+        st.write("💧 সেচ: মাঝারি পানি")
+    else:
+        st.write("🌱 ফসল: ধান")
+        st.write("🧪 সার: এখন দরকার নেই")
+        st.write("💧 সেচ: বন্ধ রাখুন")
 
 # ---------------- CONTROL ----------------
 st.subheader("🎛 নিয়ন্ত্রণ")
@@ -131,7 +106,7 @@ with c1:
 
 with c2:
     if st.button("☀️ শুকানো"):
-        st.info("শুকানো মোড চালু")
+        st.info("শুকানোর মোড চালু")
 
 with c3:
     if st.button("💧 বন্ধ"):
@@ -150,15 +125,13 @@ st.pyplot(fig)
 # ---------------- EXPERT MODE ----------------
 if mode == "🧠 Expert Mode":
     st.subheader("🔬 বিস্তারিত বিশ্লেষণ")
-    st.write("📍 জেলা:", district)
-    st.write("🌱 ফসল:", data["crop"])
-    st.write("🧪 সার:", data["fert"])
-    st.write("💧 সেচ:", data["water"])
+
+    st.write("বর্তমান আর্দ্রতা:", current)
 
     if current < 50:
-        st.write("মাটি খুব শুষ্ক")
+        st.write("মাটি খুব শুষ্ক — জরুরি সেচ প্রয়োজন")
     elif current > 85:
-        st.write("অতিরিক্ত ভেজা")
+        st.write("অতিরিক্ত ভেজা — পানি বন্ধ করুন")
     else:
         st.write("স্বাভাবিক অবস্থা")
 
