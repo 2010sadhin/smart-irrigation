@@ -6,36 +6,54 @@ import time
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
     page_title="কৃষিবন্ধু মাঠসাথী",
-    layout="wide"   # important for responsive width
+    layout="wide"
 )
 
-# ---------------- CUSTOM CSS ----------------
+# ---------------- PROFESSIONAL CSS ----------------
 st.markdown("""
 <style>
 
-/* Make content centered but flexible */
+/* Main container */
 .block-container {
     max-width: 1200px;
-    padding: 1rem;
+    padding: 1.5rem;
 }
 
-/* Card style */
+/* Header */
+.header {
+    font-size: 34px;
+    font-weight: 800;
+    color: #1b4332;
+    margin-bottom: 0;
+}
+
+/* Subtitle */
+.subheader {
+    font-size: 16px;
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+
+/* Card UI */
 .card {
-    padding: 15px;
-    border-radius: 12px;
-    background-color: #f5f7fa;
+    padding: 20px;
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     margin-bottom: 15px;
 }
 
-/* Responsive title */
-.title {
-    font-size: 32px;
-    font-weight: 700;
+/* Section title */
+.section {
+    font-size: 20px;
+    font-weight: 600;
+    margin-top: 20px;
 }
 
+/* Mobile fix */
 @media (max-width: 768px) {
-    .title {
-        font-size: 22px;
+    .header {
+        font-size: 24px;
     }
 }
 
@@ -50,8 +68,8 @@ if "history" not in st.session_state:
     st.session_state.history = []
 
 # ---------------- HEADER ----------------
-st.markdown('<div class="title">🌾 কৃষিবন্ধু মাঠসাথী</div>', unsafe_allow_html=True)
-st.caption("স্মার্ট কৃষি সহায়ক সিস্টেম")
+st.markdown('<div class="header">🌾 কৃষিবন্ধু মাঠসাথী</div>', unsafe_allow_html=True)
+st.markdown('<div class="subheader">স্মার্ট কৃষি সহায়ক সিস্টেম</div>', unsafe_allow_html=True)
 
 st.divider()
 
@@ -76,8 +94,10 @@ st.session_state.history.append(m)
 if len(st.session_state.history) > 50:
     st.session_state.history.pop(0)
 
-# ---------------- DASHBOARD GRID ----------------
-col1, col2 = st.columns([1, 1])
+# ---------------- DASHBOARD ----------------
+st.markdown('<div class="section">📊 বর্তমান অবস্থা</div>', unsafe_allow_html=True)
+
+col1, col2 = st.columns(2)
 
 with col1:
     st.markdown('<div class="card">', unsafe_allow_html=True)
@@ -94,11 +114,10 @@ with col2:
         st.info("🌱 সেচ বন্ধ আছে")
 
     st.write(fert)
-
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------- CONTROLS ----------------
-st.subheader("🎛️ নিয়ন্ত্রণ")
+st.markdown('<div class="section">🎛️ নিয়ন্ত্রণ</div>', unsafe_allow_html=True)
 
 c1, c2, c3 = st.columns(3)
 
@@ -115,9 +134,9 @@ with c3:
         st.session_state.moisture += 15
 
 # ---------------- GRAPH ----------------
-st.subheader("📊 আর্দ্রতা বিশ্লেষণ")
+st.markdown('<div class="section">📈 আর্দ্রতা বিশ্লেষণ</div>', unsafe_allow_html=True)
 
-fig, ax = plt.subplots(figsize=(10, 4))  # wide for laptop, scales for mobile
+fig, ax = plt.subplots(figsize=(10, 4))
 ax.plot(st.session_state.history, linewidth=2)
 ax.set_ylim(0, 100)
 ax.set_xlabel("সময়")
