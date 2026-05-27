@@ -1,6 +1,5 @@
 import streamlit as st
 import random
-import time
 import matplotlib.pyplot as plt
 
 # ---------------- PAGE CONFIG ----------------
@@ -9,12 +8,14 @@ st.set_page_config(page_title="কৃষিবন্ধু সহায়ক", 
 # ---------------- CSS ----------------
 st.markdown("""
 <style>
+
 .block-container {
     padding-top: 1.5rem;
     padding-left: 1rem;
     padding-right: 1rem;
 }
 
+/* Header */
 .header-box {
     background: linear-gradient(90deg, #1b4332, #2d6a4f);
     padding: 15px;
@@ -23,7 +24,7 @@ st.markdown("""
 }
 
 .header {
-    font-size: 28px;
+    font-size: 26px;
     color: white;
     font-weight: 700;
 }
@@ -47,7 +48,7 @@ st.markdown("""
 # ---------------- MODE ----------------
 mode = st.radio("মোড নির্বাচন:", ["👨‍🌾 Farmer Mode", "🧠 Expert Mode"], horizontal=True)
 
-# ---------------- 64 DISTRICTS ----------------
+# ---------------- DISTRICTS ----------------
 districts = [
 "ঢাকা","গাজীপুর","নারায়ণগঞ্জ","টাঙ্গাইল","কিশোরগঞ্জ","মানিকগঞ্জ","মুন্সিগঞ্জ",
 "চট্টগ্রাম","কক্সবাজার","রাঙ্গামাটি","খাগড়াছড়ি","বান্দরবান","ফেনী","নোয়াখালী","লক্ষ্মীপুর",
@@ -65,9 +66,8 @@ districts = [
 st.subheader("📍 আপনার জেলা নির্বাচন করুন")
 district = st.selectbox("জেলা:", districts)
 
-# ---------------- DISTRICT DATA ----------------
+# ---------------- DISTRICT LOGIC ----------------
 def get_advice(district):
-    # simplified grouped logic
     coastal = ["ভোলা","পটুয়াখালী","বরগুনা","কক্সবাজার","সাতক্ষীরা","বাগেরহাট"]
     hilly = ["রাঙ্গামাটি","খাগড়াছড়ি","বান্দরবান"]
     north = ["রংপুর","দিনাজপুর","ঠাকুরগাঁও","পঞ্চগড়","নীলফামারী"]
@@ -83,13 +83,13 @@ def get_advice(district):
 
 data = get_advice(district)
 
-# ---------------- LIVE DATA ----------------
+# ---------------- LIVE DATA (FIXED) ----------------
 if "moisture" not in st.session_state:
     st.session_state.moisture = [random.randint(60, 90) for _ in range(20)]
 
 def update():
     if len(st.session_state.moisture) == 0:
-        st.session_state.moisture = [70]  # safety fallback
+        st.session_state.moisture = [70]
 
     val = st.session_state.moisture[-1] + random.randint(-2, 2)
     val = max(40, min(100, val))
@@ -97,9 +97,7 @@ def update():
     st.session_state.moisture.append(val)
     st.session_state.moisture.pop(0)
 
-# 👉 CALL AFTER INIT
 update()
-
 current = st.session_state.moisture[-1]
 
 # ---------------- STATUS ----------------
@@ -129,7 +127,7 @@ c1, c2, c3 = st.columns(3)
 
 with c1:
     if st.button("🌧 পানি দিন"):
-        st.success("সেচ চালু")
+        st.success("সেচ চালু হয়েছে")
 
 with c2:
     if st.button("☀️ শুকানো"):
@@ -137,31 +135,33 @@ with c2:
 
 with c3:
     if st.button("💧 বন্ধ"):
-        st.warning("সেচ বন্ধ")
+        st.warning("সেচ বন্ধ করা হয়েছে")
 
 # ---------------- GRAPH ----------------
-st.subheader("📈 লাইভ গ্রাফ")
+st.subheader("📈 লাইভ আর্দ্রতা গ্রাফ")
 
 fig, ax = plt.subplots()
 ax.plot(st.session_state.moisture)
-ax.set_ylim(0,100)
+ax.set_ylim(0, 100)
 ax.set_ylabel("আর্দ্রতা (%)")
 
 st.pyplot(fig)
 
-# ---------------- EXPERT ----------------
+# ---------------- EXPERT MODE ----------------
 if mode == "🧠 Expert Mode":
-    st.subheader("🔬 বিশ্লেষণ")
-    st.write("জেলা:", district)
-    st.write("বর্তমান আর্দ্রতা:", current)
+    st.subheader("🔬 বিস্তারিত বিশ্লেষণ")
+    st.write("📍 জেলা:", district)
+    st.write("🌱 ফসল:", data["crop"])
+    st.write("🧪 সার:", data["fert"])
+    st.write("💧 সেচ:", data["water"])
 
     if current < 50:
-        st.write("মাটি শুষ্ক")
+        st.write("মাটি খুব শুষ্ক")
     elif current > 85:
         st.write("অতিরিক্ত ভেজা")
     else:
-        st.write("স্বাভাবিক")
+        st.write("স্বাভাবিক অবস্থা")
 
-# ---------------- REFRESH ----------------
-time.sleep(2)
-st.rerun()
+# ---------------- SAFE REFRESH ----------------
+if st.button("🔄 আপডেট করুন"):
+    st.rerun()
