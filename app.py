@@ -1,6 +1,7 @@
 import streamlit as st
 import random
 import pandas as pd
+import time
 
 # -----------------------------
 # PAGE CONFIG
@@ -11,32 +12,28 @@ st.set_page_config(
 )
 
 # -----------------------------
-# CUSTOM CSS
+# CSS
 # -----------------------------
 st.markdown("""
 <style>
-.block-container {
-    padding-top: 3rem;
-}
+.block-container { padding-top: 3rem; }
 
 .header-box {
     background: linear-gradient(90deg, #1b4332, #2d6a4f);
-    padding: 30px 20px;
+    padding: 30px;
     border-radius: 12px;
     text-align: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .header {
     font-size: 34px;
-    font-weight: 700;
+    font-weight: bold;
     color: white;
 }
 
 .subheader {
     font-size: 16px;
     color: #d8f3dc;
-    margin-top: 10px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -56,69 +53,83 @@ st.markdown("""
 st.write("")
 
 # -----------------------------
-# FAKE SENSOR DATA (for demo)
+# PLACEHOLDERS (IMPORTANT)
 # -----------------------------
-soil_moisture = random.randint(20, 100)
-fertility = random.randint(20, 100)
-
-# -----------------------------
-# WATER METER
-# -----------------------------
-st.subheader("💧 সেচ (Water Level)")
-
-st.progress(soil_moisture)
-
-if soil_moisture < 40:
-    st.error("🚨 এখনই পানি দিন!")
-elif soil_moisture < 70:
-    st.warning("⚠️ অল্প পানি প্রয়োজন")
-else:
-    st.success("✅ মাটি ভেজা আছে, এখন পানি লাগবে না")
-
-st.write(f"বর্তমান আর্দ্রতা: {soil_moisture}%")
+water_box = st.empty()
+fertilizer_box = st.empty()
+chart_box = st.empty()
+advice_box = st.empty()
 
 # -----------------------------
-# FERTILIZER METER
+# INITIAL GRAPH DATA
 # -----------------------------
-st.subheader("🌿 সার (Fertilizer Level)")
-
-st.progress(fertility)
-
-if fertility < 40:
-    st.error("🚨 এখনই সার প্রয়োজন!")
-elif fertility < 70:
-    st.warning("⚠️ কিছুটা সার দিতে হবে")
-else:
-    st.success("✅ সার পর্যাপ্ত আছে")
-
-st.write(f"বর্তমান উর্বরতা: {fertility}%")
+history_water = [random.randint(40,80) for _ in range(5)]
+history_fert = [random.randint(40,80) for _ in range(5)]
 
 # -----------------------------
-# GRAPH DATA
+# LIVE LOOP
 # -----------------------------
-st.subheader("📊 গত কয়েক দিনের অবস্থা")
+while True:
 
-days = ["Day 1","Day 2","Day 3","Day 4","Day 5","Today"]
+    # simulate changing values
+    soil_moisture = random.randint(20, 100)
+    fertility = random.randint(20, 100)
 
-data = {
-    "Water Level": [random.randint(30,90) for _ in range(6)],
-    "Fertilizer Level": [random.randint(30,90) for _ in range(6)]
-}
+    # update history
+    history_water.append(soil_moisture)
+    history_fert.append(fertility)
 
-df = pd.DataFrame(data, index=days)
+    history_water = history_water[-6:]
+    history_fert = history_fert[-6:]
 
-st.line_chart(df)
+    # ---------------- WATER UI ----------------
+    with water_box.container():
+        st.subheader("💧 সেচ (Water Level)")
+        st.progress(soil_moisture)
 
-# -----------------------------
-# FINAL ADVICE
-# -----------------------------
-st.subheader("🧠 স্মার্ট পরামর্শ")
+        if soil_moisture < 40:
+            st.error("🚨 এখনই পানি দিন!")
+        elif soil_moisture < 70:
+            st.warning("⚠️ অল্প পানি প্রয়োজন")
+        else:
+            st.success("✅ পানি ঠিক আছে")
 
-if soil_moisture < 40 and fertility < 40:
-    st.error("⚠️ জরুরি: পানি ও সার দুটোই দিন!")
-elif soil_moisture < 40:
-    st.warning("💧 শুধুমাত্র পানি দিন")
-elif fertility < 40:
-    st.warning("🌿 শুধুমাত্র সার দিন")
-else:
-    st.success("🌱 সব কিছু ঠিক আছে!")
+        st.write(f"বর্তমান আর্দ্রতা: {soil_moisture}%")
+
+    # ---------------- FERTILIZER UI ----------------
+    with fertilizer_box.container():
+        st.subheader("🌿 সার (Fertilizer Level)")
+        st.progress(fertility)
+
+        if fertility < 40:
+            st.error("🚨 এখনই সার দিন!")
+        elif fertility < 70:
+            st.warning("⚠️ কিছুটা সার প্রয়োজন")
+        else:
+            st.success("✅ সার ঠিক আছে")
+
+        st.write(f"বর্তমান উর্বরতা: {fertility}%")
+
+    # ---------------- GRAPH ----------------
+    df = pd.DataFrame({
+        "Water": history_water,
+        "Fertilizer": history_fert
+    })
+
+    chart_box.line_chart(df)
+
+    # ---------------- SMART ADVICE ----------------
+    with advice_box.container():
+        st.subheader("🧠 স্মার্ট পরামর্শ")
+
+        if soil_moisture < 40 and fertility < 40:
+            st.error("⚠️ পানি ও সার দুটোই দিন!")
+        elif soil_moisture < 40:
+            st.warning("💧 পানি দিন")
+        elif fertility < 40:
+            st.warning("🌿 সার দিন")
+        else:
+            st.success("🌱 সব ঠিক আছে")
+
+    # refresh every 2 seconds
+    time.sleep(2)
