@@ -88,12 +88,18 @@ if "moisture" not in st.session_state:
     st.session_state.moisture = [random.randint(60, 90) for _ in range(20)]
 
 def update():
-    val = st.session_state.moisture[-1] + random.randint(-2,2)
+    if len(st.session_state.moisture) == 0:
+        st.session_state.moisture = [70]  # safety fallback
+
+    val = st.session_state.moisture[-1] + random.randint(-2, 2)
     val = max(40, min(100, val))
+
     st.session_state.moisture.append(val)
     st.session_state.moisture.pop(0)
 
+# 👉 CALL AFTER INIT
 update()
+
 current = st.session_state.moisture[-1]
 
 # ---------------- STATUS ----------------
